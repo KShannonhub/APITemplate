@@ -1,4 +1,5 @@
-﻿using APITemplate.Models;
+﻿using APITemplate.Infrastructure;
+using APITemplate.Models;
 using APITemplate.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -23,12 +24,13 @@ namespace APITemplate.Controllers
         [HttpGet(Name = nameof(GetAllRooms))]
         public async Task<ActionResult<Collection<Room>>> GetAllRooms(
             [FromQuery] PagingOptions pagingOptions,
-            [FromQuery] SortOptions<Room, RoomEntity> sortOptions)
+            [FromQuery] SortOptions<Room, RoomEntity> sortOptions,
+            [FromQuery] SearchOptions<Room, RoomEntity> searchOptions)
         {
             pagingOptions.Offset ??= _defaultPagingOptions.Offset;
             pagingOptions.Limit ??= _defaultPagingOptions.Limit;
 
-            var rooms = await _roomService.GetRoomsAsync(pagingOptions, sortOptions);
+            var rooms = await _roomService.GetRoomsAsync(pagingOptions, sortOptions, searchOptions);
 
             var collection = PagedCollection<Room>.Create<RoomResponse>(
                Link.ToCollection(nameof(GetAllRooms)),

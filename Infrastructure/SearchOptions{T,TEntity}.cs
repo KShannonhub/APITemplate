@@ -1,15 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace APITemplate.Models
+namespace APITemplate.Infrastructure
 {
-    public class SortOptions<T, TEntity> : IValidatableObject
+    public class SearchOptions<T, TEntity> : IValidatableObject
     {
-        public string[] OrderBy { get; set; }
+        public string[] Search { get; set; }
 
-        // APS Call this to validate the sort options
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            var processor = new SortOptionsProcessor<T, TEntity>(OrderBy);
+            var processor = new SearchOptionsProcessor<T, TEntity>(Search);
 
             var validTerms = processor.GetValidTerms().Select(x => x.Name);
 
@@ -18,15 +17,13 @@ namespace APITemplate.Models
 
             foreach (var term in invalidTerms)
             {
-                yield return new ValidationResult(
-                                       $"Invalid sort term '{term}'.",
-                                                          new[] { nameof(OrderBy) });
+                yield return new ValidationResult($"Invalid search term '{term}'.",new[] { nameof(Search) });
             }
         }
 
         public IQueryable<TEntity> Apply(IQueryable<TEntity> query)
         {
-            var processor = new SortOptionsProcessor<T, TEntity>(OrderBy);
+            var processor = new SearchOptionsProcessor<T, TEntity>(Search);
 
             return processor.Apply(query);
         }

@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using APITemplate.Infrastructure;
 
-namespace APITemplate.Infrastructure
+namespace APITemplate.Models
 {
     public class SortOptionsProcessor<T, TEntity>
     {
@@ -40,7 +41,7 @@ namespace APITemplate.Infrastructure
                 }
 
                 var descending = tokens.Length > 1 && tokens[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
-                
+
                 yield return new SortTerm
                 {
                     Name = tokens[0],
