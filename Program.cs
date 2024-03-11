@@ -3,6 +3,7 @@ using APITemplate.Filters;
 using APITemplate.Infrastructure;
 using APITemplate.Models;
 using APITemplate.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -30,6 +31,8 @@ builder.Services.Configure<HotelInfo>(
     builder.Configuration.GetSection("Info"));
 
 builder.Services.Configure<HotelOptions>(builder.Configuration);
+builder.Services.Configure<PagingOptions>(
+    builder.Configuration.GetSection("DefaultPagingOptions"));
 
 builder.Services.AddDbContext<HotelApiDbContext>(
     options => options.UseInMemoryDatabase("HotelApi"));
@@ -42,7 +45,14 @@ builder.Services.AddScoped<IDateLogicService, DefaultDateLogicService>();
 builder.Services.AddAutoMapper(
     options => options.AddProfile<MappingProfile>());
 
-
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var result = new ApiError(context.ModelState);
+        return new BadRequestObjectResult(result);
+    };
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

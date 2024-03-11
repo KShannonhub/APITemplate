@@ -20,7 +20,7 @@ namespace APITemplate.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Opening>> GetOpeningsAsync()
+        public async Task<PagedResults<Opening>> GetOpeningsAsync(PagingOptions pagingOptions)
         {
             var rooms = await _context.Rooms.ToArrayAsync();
 
@@ -53,8 +53,16 @@ namespace APITemplate.Services
 
                 allOpenings.AddRange(openings);
             }
+            
+            var pagedOpenings = allOpenings
+                .Skip(pagingOptions.Offset.GetValueOrDefault(1))
+                .Take(pagingOptions.Limit.GetValueOrDefault(3));
 
-            return allOpenings;
+            return new PagedResults<Opening>
+            {
+                Items = pagedOpenings,
+                TotalSize = allOpenings.Count
+            };
         }
 
         public async Task<IEnumerable<BookingRange>> GetConflictingSlots(
