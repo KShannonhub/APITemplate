@@ -1,5 +1,6 @@
 ﻿using APITemplate.Models;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace APITemplate.Services
@@ -8,23 +9,25 @@ namespace APITemplate.Services
     {
         private readonly HotelApiDbContext _context;
         private readonly IDateLogicService _dateLogicService;
-        private readonly IMapper _mapper;
+        private readonly AutoMapper.IConfigurationProvider _mappingConfiguration;
 
         public DefaultOpeningService(
             HotelApiDbContext context,
             IDateLogicService dateLogicService,
-            IMapper mapper)
+             AutoMapper.IConfigurationProvider mappingConfiguration)
         {
             _context = context;
             _dateLogicService = dateLogicService;
-            _mapper = mapper;
+            _mappingConfiguration = mappingConfiguration;
         }
 
-        public async Task<PagedResults<Opening>> GetOpeningsAsync(PagingOptions pagingOptions)
+        public async Task<PagedResults<Opening>> GetOpeningsAsync(
+           PagingOptions pagingOptions,
+           SortOptions<Opening, OpeningEntity> sortOptions)
         {
             var rooms = await _context.Rooms.ToArrayAsync();
 
-            var allOpenings = new List<Opening>();
+            var allOpenings = new List<OpeningEntity>();
 
             foreach (var room in rooms)
             {
@@ -48,38 +51,40 @@ namespace APITemplate.Services
                         Rate = room.Rate,
                         StartAt = slot.StartAt,
                         EndAt = slot.EndAt
-                    })
-                    .Select(model => _mapper.Map<Opening>(model));
+                    });
 
                 allOpenings.AddRange(openings);
             }
-            
-            var pagedOpenings = allOpenings
-                .Skip(pagingOptions.Offset.GetValueOrDefault(1))
-                .Take(pagingOptions.Limit.GetValueOrDefault(3));
+
+            var pseudoQuery = allOpenings.AsQueryable();
+            pseudoQuery = sortOptions.Apply(pseudoQuery);
+
+            var size = pseudoQuery.Count();
+
+            var items = pseudoQuery
+                .Skip(pagingOptions.Offset.Value)
+                .Take(pagingOptions.Limit.Value)
+                .ProjectTo<Opening>(_mappingConfiguration)
+                .ToArray();
 
             return new PagedResults<Opening>
             {
-                Items = pagedOpenings,
-                TotalSize = allOpenings.Count
+                Items = items,
+                TotalSize = size
             };
         }
 
         public async Task<IEnumerable<BookingRange>> GetConflictingSlots(
-            Guid roomId,
-            DateTimeOffset start,
-            DateTimeOffset end)
+           Guid roomId,
+           DateTimeOffset start,
+           DateTimeOffset end)
         {
-            var bookings = await _context.Bookings
-        .Where(b => b.Room.Id == roomId)
-        .ToListAsync();
-
-            var conflictingBookings = bookings
-                .Where(b => _dateLogicService.DoesConflict(b, start, end))
-                .SelectMany(existing => _dateLogicService.GetAllSlots(existing.StartAt, existing.EndAt))
-                .ToArray();
-
-            return conflictingBookings;
+            return await _context.Bookings
+                .Where(b => b.Room.Id == roomId && _dateLogicService.DoesConflict(b, start, end))
+                // Split each existing booking up into a set of atomic slots
+                .SelectMany(existing => _dateLogicService
+                    .GetAllSlots(existing.StartAt, existing.EndAt))
+                .ToArrayAsync();
         }
     }
 }

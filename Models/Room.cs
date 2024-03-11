@@ -6,6 +6,7 @@ namespace APITemplate.Models
     {
         [Sortable]
         public string Name { get; set; }
+        
         [Sortable(Default = true)]
         public decimal Rate { get; set; }
     }

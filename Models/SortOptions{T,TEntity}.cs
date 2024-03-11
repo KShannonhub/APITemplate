@@ -10,7 +10,7 @@ namespace APITemplate.Models
         // APS Call this to validate the sort options
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            var processor = new SortProcesses<T, TEntity>(OrderBy);
+            var processor = new SortOptionsProcessor<T, TEntity>(OrderBy);
 
             var validTerms = processor.GetValidTerms().Select(x => x.Name);
 
@@ -27,7 +27,7 @@ namespace APITemplate.Models
 
         public IQueryable<TEntity> Apply(IQueryable<TEntity> query)
         {
-            var processor = new SortProcesses<T, TEntity>(OrderBy);
+            var processor = new SortOptionsProcessor<T, TEntity>(OrderBy);
 
             return processor.Apply(query);
         }

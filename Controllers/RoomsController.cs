@@ -42,9 +42,9 @@ namespace APITemplate.Controllers
 
         // GET /rooms/openings
         [HttpGet("openings", Name = nameof(GetAllRoomOpenings))]
-        public async Task<ActionResult<Collection<Opening>>> GetAllRoomOpenings([FromQuery] PagingOptions pagingOptions = null)
+        public async Task<ActionResult<Collection<Opening>>> GetAllRoomOpenings([FromQuery] PagingOptions pagingOptions, [FromQuery] SortOptions<Opening, OpeningEntity> sortOptions)
         {
-            var openings = await _openingService.GetOpeningsAsync(pagingOptions);
+            var openings = await _openingService.GetOpeningsAsync(pagingOptions, sortOptions);
 
             pagingOptions.Offset ??= _defaultPagingOptions.Offset;
             pagingOptions.Limit ??= _defaultPagingOptions.Limit;

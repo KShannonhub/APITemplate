@@ -23,15 +23,10 @@ namespace APITemplate.Services
                 return null;
             }
 
-            return MapEntityToModel(entity);
-        }
-
-        private Room MapEntityToModel(RoomEntity entity)
-        {
             var mapper = _mappingConfiguration.CreateMapper();
             return mapper.Map<Room>(entity);
         }
-
+        
         public async Task<PagedResults<Room>> GetRoomsAsync(PagingOptions pagingOptions, SortOptions<Room, RoomEntity> sortOptions)
         {
             IQueryable<RoomEntity> query = _context.Rooms;

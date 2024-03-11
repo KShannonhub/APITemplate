@@ -41,7 +41,12 @@ namespace APITemplate.Filters
                 return;
             }
 
-            var allProperties = model.GetType().GetProperties().Where(p => p.CanRead).ToArray();
+           var allProperties = model
+                .GetType().GetTypeInfo()
+                .GetAllProperties()
+                .Where(p => p.CanRead)
+                .ToArray();
+
             var linkProperties = allProperties.Where(p => p.CanWrite && p.PropertyType == typeof(Link));
 
             foreach (var linkProperty in linkProperties)

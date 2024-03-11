@@ -15,7 +15,12 @@ namespace APITemplate
         public static async Task AddTestData(HotelApiDbContext context,
             IDateLogicService dateLogicService)
         {
-           
+            if (context.Rooms.Any())
+            {
+                // Already has data
+                return;
+            }
+
             var oxford = context.Rooms.Add(new RoomEntity
             {
                 Id = Guid.Parse("301df04d-8679-4b1b-ab92-0a586ae53d08"),
